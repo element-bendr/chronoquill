@@ -2,7 +2,7 @@ import type { AppConfig } from '../config/schema';
 import { Repositories } from '../db/repositories';
 import type { AppLogger } from '../logging/logger';
 import { retryWithBackoff } from '../utils/retry';
-import { isoNow, localDay } from '../utils/time';
+import { isoNow, isInsideQuietHours, localDay } from '../utils/time';
 import type { Route } from '../types/domain';
 import type { WhatsAppTransport } from '../adapters/whatsapp';
 import { RoutePlannerService } from '../routing/routePlannerService';
@@ -26,6 +26,25 @@ export class WhatsAppPublisherService {
     }
 
     const targetId = await this.transport.resolveTarget(route.target_type, route.target_ref);
+    const quietHours = JSON.parse(route.quiet_hours_json) as { start: string; end: string }[];
+
+    if (isInsideQuietHours(now, route.timezone || this.config.TIMEZONE, quietHours)) {
+      this.repos.insertSendEvent({
+        routeId: route.id,
+        quoteId: null,
+        targetResolvedId: targetId,
+        attemptedAt: isoNow(),
+        localDay: local,
+        status: 'skipped',
+        retryCount: 0,
+        errorCode: 'quiet_hours',
+        errorMessage: 'Route execution blocked by quiet-hours window',
+        wasCatchup: options.catchup
+      });
+      this.logger.info({ route: route.name }, 'send_skipped_quiet_hours');
+      return;
+    }
+
     const quote = this.planner.pickQuote(route, targetId, now);
 
     if (!quote) {

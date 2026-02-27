@@ -2,9 +2,11 @@ import cron, { type ScheduledTask } from 'node-cron';
 import type { Repositories } from '../db/repositories';
 import type { AppLogger } from '../logging/logger';
 import { WhatsAppPublisherService } from '../publisher/whatsAppPublisherService';
+import { localMinuteKey } from '../utils/time';
 
 export class SchedulerService {
   private readonly jobs: ScheduledTask[] = [];
+  private readonly routeMinuteGuards = new Map<string, string>();
 
   public constructor(
     private readonly repos: Repositories,
@@ -19,6 +21,14 @@ export class SchedulerService {
       const job = cron.schedule(
         route.schedule_cron,
         async () => {
+          const currentKey = localMinuteKey(new Date(), route.timezone);
+          const previousKey = this.routeMinuteGuards.get(route.id);
+          if (previousKey === currentKey) {
+            this.logger.warn({ route: route.name, minuteKey: currentKey }, 'scheduler_duplicate_window_blocked');
+            return;
+          }
+          this.routeMinuteGuards.set(route.id, currentKey);
+
           try {
             await this.publisher.sendRoute(route, { dryRun: false, catchup: false });
           } catch (error) {
@@ -42,5 +52,6 @@ export class SchedulerService {
       job.destroy();
     }
     this.jobs.length = 0;
+    this.routeMinuteGuards.clear();
   }
 }

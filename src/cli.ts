@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import cron, { type ScheduledTask } from 'node-cron';
 import { createRuntime } from './cli/runtime';
 
 const withRuntime = async (work: (runtime: ReturnType<typeof createRuntime>) => Promise<void> | void): Promise<void> => {
@@ -97,15 +98,39 @@ const run = async (): Promise<void> => {
     .description('Start long-lived scheduler service with boot catch-up and health check')
     .action(async () => {
       await withRuntime(async (rt) => {
+        const serviceJobs: ScheduledTask[] = [];
         await rt.publisher.connect();
         await rt.bootSupervisor.runCatchupCheck();
         rt.scheduler.register();
         await rt.health.check();
 
+        if (rt.config.SOURCE_SYNC_ENABLED) {
+          const sourceSyncJob = cron.schedule(
+            rt.config.SOURCE_SYNC_SCHEDULE,
+            async () => {
+              try {
+                await rt.sourceSync.syncAllSources();
+              } catch (error) {
+                rt.logger.error(
+                  { error: error instanceof Error ? error.message : String(error) },
+                  'scheduled_source_sync_failed'
+                );
+              }
+            },
+            { timezone: rt.config.TIMEZONE }
+          );
+          serviceJobs.push(sourceSyncJob);
+          rt.logger.info({ cron: rt.config.SOURCE_SYNC_SCHEDULE }, 'scheduler_source_sync_registered');
+        }
+
         rt.logger.info('service_started');
         await new Promise<void>((resolve) => {
           const close = () => {
             rt.scheduler.stop();
+            for (const job of serviceJobs) {
+              job.stop();
+              job.destroy();
+            }
             resolve();
           };
           process.once('SIGINT', close);
