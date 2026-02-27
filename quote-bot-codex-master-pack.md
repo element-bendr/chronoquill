@@ -627,6 +627,12 @@ Every meaningful change must append:
 - Migration Impact: No runtime/data migration impact.
 - Rollback Notes: Git-only operation; revert commits or force-update branch only with explicit change-management approval.
 
+- Date: 2026-02-27
+- Change: Added regression coverage for global same-day duplicate behavior (blocked by default, route override allowed) and extracted/tested scheduler minute-window guard.
+- Reason: Ensure anti-repeat policy and duplicate-trigger protection are explicitly verified in unit tests.
+- Migration Impact: No schema changes.
+- Rollback Notes: Revert associated test and scheduler guard refactor commit if rollback is required.
+
 
 
 <!-- 08-TASKLIST.md -->

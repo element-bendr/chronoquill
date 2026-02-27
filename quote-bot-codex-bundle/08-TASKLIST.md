@@ -9,7 +9,7 @@
 - Phase 5 completed
 - Phase 6 completed
 - Phase 7 not started (optional LLM layer intentionally disabled in core path)
-- Phase 8 in progress (tests and service hardening added; more edge-case coverage can be expanded)
+- Phase 8 in progress (tests and service hardening added; duplicate-window and global same-day anti-repeat tests now covered)
 
 ## Phase 0 - Project Setup
 - Initialize Node.js + TypeScript project
