@@ -137,3 +137,9 @@ Every meaningful change must append:
 - Reason: Validate production browser-worker ingestion path against a real, user-requested source.
 - Migration Impact: No schema changes; seed/source registry update only.
 - Rollback Notes: Remove source entry from seed and re-run bootstrap if source should be disabled.
+
+- Date: 2026-02-27
+- Change: Improved deterministic quote extraction to filter browser-page chrome/navigation/metadata lines, added extractor regression tests, purged previously noisy Poe rows, and re-ingested clean `Edgar Allan Poe` quotes from QuotationsPage.
+- Reason: Remove mixed non-quote artifacts from ingestion output and keep database quote quality production-safe.
+- Migration Impact: No schema changes; data refresh performed for source `src-edgar-allan-poe-quotationspage`.
+- Rollback Notes: Revert extractor changes and tests, then re-sync sources if old extraction behavior is required.
