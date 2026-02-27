@@ -137,6 +137,34 @@ const run = async (): Promise<void> => {
     });
 
   program
+    .command('export-send-history')
+    .description('Export send event history to CSV')
+    .option('-o, --out <path>', 'Output CSV path', './exports/send-history.csv')
+    .option('-l, --limit <number>', 'Max rows to export', '1000')
+    .action(async (options: { out: string; limit: string }) => {
+      await withRuntime((rt) => {
+        const limit = Number(options.limit);
+        const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 1000;
+        const result = rt.csvExport.exportSendHistory(options.out, safeLimit);
+        rt.logger.info({ path: result.path, count: result.count }, 'csv_export_send_history_complete');
+      });
+    });
+
+  program
+    .command('export-review-queue')
+    .description('Export review queue to CSV')
+    .option('-o, --out <path>', 'Output CSV path', './exports/review-queue.csv')
+    .option('-l, --limit <number>', 'Max rows to export', '1000')
+    .action(async (options: { out: string; limit: string }) => {
+      await withRuntime((rt) => {
+        const limit = Number(options.limit);
+        const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 1000;
+        const result = rt.csvExport.exportReviewQueue(options.out, safeLimit);
+        rt.logger.info({ path: result.path, count: result.count }, 'csv_export_review_queue_complete');
+      });
+    });
+
+  program
     .command('run-service')
     .description('Start long-lived scheduler service with boot catch-up and health check')
     .action(async () => {

@@ -3,6 +3,23 @@ import { isoNow } from '../utils/time';
 import type { Db } from './database';
 import type { Quote, QuoteState, Route, SendStatus, Source } from '../types/domain';
 
+export interface SendEventExportRow {
+  id: string;
+  route_id: string;
+  route_name: string | null;
+  quote_id: string | null;
+  quote_author: string | null;
+  quote_text: string | null;
+  target_resolved_id: string;
+  attempted_at: string;
+  local_day: string;
+  status: SendStatus;
+  retry_count: number;
+  error_code: string | null;
+  error_message: string | null;
+  was_catchup: number;
+}
+
 export class Repositories {
   public constructor(private readonly db: Db) {}
 
@@ -196,6 +213,33 @@ export class Repositories {
     return this.db.conn
       .prepare("SELECT * FROM quotes WHERE state = 'review' ORDER BY first_seen_at ASC LIMIT ?")
       .all(limit) as Quote[];
+  }
+
+  exportSendEventsCsvRows(limit = 1000): SendEventExportRow[] {
+    return this.db.conn
+      .prepare(
+        `SELECT
+          se.id,
+          se.route_id,
+          r.name AS route_name,
+          se.quote_id,
+          q.author AS quote_author,
+          q.text AS quote_text,
+          se.target_resolved_id,
+          se.attempted_at,
+          se.local_day,
+          se.status,
+          se.retry_count,
+          se.error_code,
+          se.error_message,
+          se.was_catchup
+         FROM send_events se
+         LEFT JOIN routes r ON r.id = se.route_id
+         LEFT JOIN quotes q ON q.id = se.quote_id
+         ORDER BY se.attempted_at DESC
+         LIMIT ?`
+      )
+      .all(limit) as SendEventExportRow[];
   }
 
   updateQuoteIndexed(quoteId: string, normalizedText: string, quoteHash: string): void {

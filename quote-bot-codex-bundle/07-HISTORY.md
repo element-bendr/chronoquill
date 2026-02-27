@@ -77,3 +77,9 @@ Every meaningful change must append:
 - Reason: Complete operator-driven low-confidence review flow required for Phase 7 and prevent implicit auto-approval behavior.
 - Migration Impact: No schema changes.
 - Rollback Notes: Revert review queue service/CLI commit; curation pipeline still functions without manual decision commands.
+
+- Date: 2026-02-27
+- Change: Added CSV export operations with `export-send-history` and `export-review-queue` CLI commands, plus export service and tests.
+- Reason: Improve observability and operational reporting for send history and manual review backlog.
+- Migration Impact: No schema changes.
+- Rollback Notes: Revert CSV export service/CLI changes; no data migration rollback required.
