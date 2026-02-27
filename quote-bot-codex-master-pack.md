@@ -663,6 +663,12 @@ Every meaningful change must append:
 - Migration Impact: Added migration `002_deferred_route_runs.sql` creating `deferred_route_runs` table and supporting indexes.
 - Rollback Notes: Revert scheduler/publisher deferral integration and migration if required; keep backup before schema rollback.
 
+- Date: 2026-02-27
+- Change: Replaced mock/log transport with production Baileys WhatsApp transport (QR pairing, persistent auth state, target resolution, reconnect path) and switched runtime/config defaults to Baileys.
+- Reason: Move from simulation transport to real WhatsApp delivery path for production use.
+- Migration Impact: No schema changes; new runtime config keys added (`BAILEYS_AUTH_DIR`, `BAILEYS_PRINT_QR`, `BAILEYS_BROWSER_NAME`).
+- Rollback Notes: Revert transport adapter changes and restore previous transport configuration if needed.
+
 
 
 <!-- 08-TASKLIST.md -->
@@ -753,6 +759,7 @@ The project is done for v1 when:
 
 ## Runtime Model
 The app runs as a long-lived local service.
+WhatsApp transport is Baileys-based with linked-device auth persisted under `BAILEYS_AUTH_DIR`.
 
 ## Auto-Start Strategy on Linux
 Use a systemd user service so the process starts when the user session starts.

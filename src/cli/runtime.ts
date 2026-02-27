@@ -2,7 +2,7 @@ import { loadConfig } from '../config/loadConfig';
 import { Db } from '../db/database';
 import { Repositories } from '../db/repositories';
 import { buildLogger } from '../logging/logger';
-import { LogWhatsAppTransport } from '../adapters/whatsapp';
+import { BaileysWhatsAppTransport } from '../adapters/whatsapp';
 import { NoopBrowserWorker } from '../browser/worker';
 import { DefaultQuoteSourceAdapter } from '../adapters/sourceAdapter';
 import { QuoteExtractor } from '../ingestion/extractor';
@@ -34,7 +34,11 @@ export const createRuntime = () => {
   db.runMigrations();
 
   const repos = new Repositories(db);
-  const transport = new LogWhatsAppTransport();
+  const transport = new BaileysWhatsAppTransport({
+    authDir: config.BAILEYS_AUTH_DIR,
+    printQR: config.BAILEYS_PRINT_QR,
+    browserName: config.BAILEYS_BROWSER_NAME
+  });
   const browserWorker = new NoopBrowserWorker();
   const sourceAdapter = new DefaultQuoteSourceAdapter(browserWorker);
   const extractor = new QuoteExtractor();

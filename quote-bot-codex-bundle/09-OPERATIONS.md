@@ -2,6 +2,7 @@
 
 ## Runtime Model
 The app runs as a long-lived local service.
+WhatsApp transport is Baileys-based with linked-device auth persisted under `BAILEYS_AUTH_DIR`.
 
 ## Auto-Start Strategy on Linux
 Use a systemd user service so the process starts when the user session starts.

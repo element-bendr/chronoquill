@@ -42,6 +42,16 @@ npm run dev -- run-service
   - `LLM_CURATION_ENABLED=true`
   - `LLM_PROVIDER_NAME=heuristic`
 
+## WhatsApp Connection (Production Transport)
+- Transport uses Baileys with persistent auth files in `BAILEYS_AUTH_DIR`.
+- First connection requires QR scan:
+  1. run `npm run dev -- send-now` or `npm run dev -- run-service`
+  2. scan QR from terminal with WhatsApp Linked Devices
+  3. session is persisted; future runs reconnect without rescanning unless logged out
+- Route targets:
+  - `target_type=user`: set `target_ref` to phone digits with country code (or full `@s.whatsapp.net` JID)
+  - `target_type=group`: set `target_ref` to group JID (`...@g.us`) or exact group subject name
+
 ## Systemd user service
 Copy `systemd/chronoquill.service` to:
 - `~/.config/systemd/user/chronoquill.service`

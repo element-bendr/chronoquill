@@ -95,3 +95,9 @@ Every meaningful change must append:
 - Reason: Ensure quiet-hours behavior defers delivery instead of dropping scheduled send opportunities.
 - Migration Impact: Added migration `002_deferred_route_runs.sql` creating `deferred_route_runs` table and supporting indexes.
 - Rollback Notes: Revert scheduler/publisher deferral integration and migration if required; keep backup before schema rollback.
+
+- Date: 2026-02-27
+- Change: Replaced mock/log transport with production Baileys WhatsApp transport (QR pairing, persistent auth state, target resolution, reconnect path) and switched runtime/config defaults to Baileys.
+- Reason: Move from simulation transport to real WhatsApp delivery path for production use.
+- Migration Impact: No schema changes; new runtime config keys added (`BAILEYS_AUTH_DIR`, `BAILEYS_PRINT_QR`, `BAILEYS_BROWSER_NAME`).
+- Rollback Notes: Revert transport adapter changes and restore previous transport configuration if needed.
