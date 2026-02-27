@@ -39,8 +39,8 @@ const run = async (): Promise<void> => {
     .command('curate-quotes')
     .description('Run deterministic curation pass for candidate/review quotes')
     .action(async () => {
-      await withRuntime((rt) => {
-        rt.curation.runPendingCuration();
+      await withRuntime(async (rt) => {
+        await rt.curation.runPendingCuration();
       });
     });
 

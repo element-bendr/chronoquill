@@ -14,6 +14,7 @@ export const makeTestConfig = (databasePath: string): AppConfig => ({
   TRANSPORT_ADAPTER: 'log',
   BROWSER_WORKER_ADAPTER: 'noop',
   LLM_CURATION_ENABLED: false,
+  LLM_PROVIDER_NAME: 'none',
   SOURCE_SYNC_ENABLED: true,
   SOURCE_SYNC_SCHEDULE: '0 3 * * *',
   CATCHUP_ENABLED: true,

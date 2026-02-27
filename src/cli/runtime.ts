@@ -18,6 +18,11 @@ import { HealthMonitorService } from '../health/healthMonitorService';
 import { BootstrapService } from '../services/bootstrapService';
 import { ReindexService } from '../services/reindexService';
 import { DbCheckService } from '../services/dbCheckService';
+import {
+  HeuristicLLMCuratorAgent,
+  NoopLLMCuratorAgent,
+  type LLMCuratorAgent
+} from '../services/llmCuratorAgent';
 
 export const createRuntime = () => {
   const config = loadConfig();
@@ -33,7 +38,11 @@ export const createRuntime = () => {
   const dedup = new DeduplicationService();
   const curator = new QuoteCuratorService(dedup);
   const sourceSync = new SourceSyncService(logger, repos, sourceAdapter, extractor, curator);
-  const curation = new CurationService(repos, curator, logger);
+  const llmCurator: LLMCuratorAgent =
+    config.LLM_CURATION_ENABLED && config.LLM_PROVIDER_NAME === 'heuristic'
+      ? new HeuristicLLMCuratorAgent()
+      : new NoopLLMCuratorAgent();
+  const curation = new CurationService(repos, curator, logger, config, llmCurator);
   const planner = new RoutePlannerService(repos, config);
   const publisher = new WhatsAppPublisherService(transport, repos, planner, logger, config);
   const scheduler = new SchedulerService(repos, publisher, logger);

@@ -97,6 +97,12 @@ export class Repositories {
     this.db.conn.prepare('UPDATE quotes SET state = ?, last_reviewed_at = ? WHERE id = ?').run(state, isoNow(), quoteId);
   }
 
+  updateQuoteCurationMetadata(quoteId: string, row: { confidence: number; themes: string[]; tone: string }): void {
+    this.db.conn
+      .prepare('UPDATE quotes SET confidence = ?, theme_json = ?, tone = ?, last_reviewed_at = ? WHERE id = ?')
+      .run(row.confidence, JSON.stringify(row.themes), row.tone, isoNow(), quoteId);
+  }
+
   findQuoteByHash(hash: string): Quote | undefined {
     return this.db.conn.prepare('SELECT * FROM quotes WHERE quote_hash = ? LIMIT 1').get(hash) as Quote | undefined;
   }

@@ -65,3 +65,9 @@ Every meaningful change must append:
 - Reason: Ensure anti-repeat policy and duplicate-trigger protection are explicitly verified in unit tests.
 - Migration Impact: No schema changes.
 - Rollback Notes: Revert associated test and scheduler guard refactor commit if rollback is required.
+
+- Date: 2026-02-27
+- Change: Added feature-flagged optional `LLMCuratorAgent` integration for offline advisory curation (`LLM_PROVIDER_NAME=heuristic|none`) and wired `curate-quotes` to apply advisory tags/tone while preserving deterministic final state validation.
+- Reason: Start Phase 7 without introducing LLM dependency in routing/scheduling/publishing hot path.
+- Migration Impact: No schema changes; advisory traces recorded in `app_events` with event type `llm_curation_advisory`.
+- Rollback Notes: Set `LLM_CURATION_ENABLED=false` or revert integration commit; deterministic curation continues to function unchanged.

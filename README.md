@@ -29,6 +29,12 @@ npm run dev -- db-check
 npm run dev -- run-service
 ```
 
+## Optional Offline Advisory Curation
+- Keep daily send path deterministic and LLM-free.
+- To enable offline advisory curation during `curate-quotes`, set:
+  - `LLM_CURATION_ENABLED=true`
+  - `LLM_PROVIDER_NAME=heuristic`
+
 ## Systemd user service
 Copy `systemd/chronoquill.service` to:
 - `~/.config/systemd/user/chronoquill.service`

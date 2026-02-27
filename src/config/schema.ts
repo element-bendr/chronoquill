@@ -26,6 +26,7 @@ export const envSchema = z.object({
   TRANSPORT_ADAPTER: z.enum(['log']).default('log'),
   BROWSER_WORKER_ADAPTER: z.enum(['noop']).default('noop'),
   LLM_CURATION_ENABLED: envBool(false),
+  LLM_PROVIDER_NAME: z.enum(['none', 'heuristic']).default('none'),
   SOURCE_SYNC_ENABLED: envBool(true),
   SOURCE_SYNC_SCHEDULE: z.string().min(1).default('0 3 * * *'),
   CATCHUP_ENABLED: envBool(true),
