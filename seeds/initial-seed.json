@@ -25,6 +25,17 @@
       "priority": 20,
       "allowed_themes": ["focus", "craft"],
       "enabled": true
+    },
+    {
+      "id": "src-edgar-allan-poe-quotationspage",
+      "name": "QuotationsPage Edgar Allan Poe",
+      "author": "Edgar Allan Poe",
+      "source_type": "static_url",
+      "url_or_path": "https://www.quotationspage.com/quotes/Edgar_Allan_Poe/",
+      "fetch_mode": "browser",
+      "priority": 15,
+      "allowed_themes": ["literature", "poetry", "dark"],
+      "enabled": true
     }
   ],
   "routes": [

@@ -131,3 +131,9 @@ Every meaningful change must append:
 - Reason: Prevent non-critical inbound persistence race from crashing ad-hoc send scripts during transport shutdown.
 - Migration Impact: No schema changes.
 - Rollback Notes: Revert service-layer error handling to previous strict behavior if hard-fail semantics are preferred.
+
+- Date: 2026-02-27
+- Change: Added `QuotationsPage Edgar Allan Poe` source (`https://www.quotationspage.com/quotes/Edgar_Allan_Poe/`) with `fetch_mode=browser` and validated ingestion through `agent-browser`.
+- Reason: Validate production browser-worker ingestion path against a real, user-requested source.
+- Migration Impact: No schema changes; seed/source registry update only.
+- Rollback Notes: Remove source entry from seed and re-run bootstrap if source should be disabled.
