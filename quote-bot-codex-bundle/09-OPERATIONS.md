@@ -54,6 +54,7 @@ Operational backup/restore commands:
 - one successful send per route/local-day enforced in DB, not only in scheduler logic
 - cooldown window enabled by default
 - quiet hours configurable
+- quiet-hours routes are deferred to the next allowed minute via deferred route queue
 - dry-run mode available
 
 ## Suggested Default Config

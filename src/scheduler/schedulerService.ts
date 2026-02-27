@@ -2,7 +2,7 @@ import cron, { type ScheduledTask } from 'node-cron';
 import type { Repositories } from '../db/repositories';
 import type { AppLogger } from '../logging/logger';
 import { WhatsAppPublisherService } from '../publisher/whatsAppPublisherService';
-import { localMinuteKey } from '../utils/time';
+import { isoNow, localMinuteKey } from '../utils/time';
 import { RouteExecutionWindowGuard } from './routeExecutionWindowGuard';
 
 export class SchedulerService {
@@ -17,6 +17,7 @@ export class SchedulerService {
 
   register(): void {
     const routes = this.repos.getEnabledRoutes();
+    const routeMap = new Map(routes.map((r) => [r.id, r]));
 
     for (const route of routes) {
       const job = cron.schedule(
@@ -43,6 +44,31 @@ export class SchedulerService {
       this.jobs.push(job);
       this.logger.info({ route: route.name, cron: route.schedule_cron }, 'scheduler_route_registered');
     }
+
+    const deferredJob = cron.schedule('* * * * *', async () => {
+      const due = this.repos.listDueDeferredRouteRuns(isoNow());
+      if (due.length === 0) {
+        return;
+      }
+
+      for (const run of due) {
+        const route = routeMap.get(run.route_id);
+        if (!route || route.enabled !== 1) {
+          continue;
+        }
+
+        try {
+          await this.publisher.sendRoute(route, { dryRun: false, catchup: false, fromDeferred: true });
+        } catch (error) {
+          this.logger.error(
+            { route: route.name, error: error instanceof Error ? error.message : String(error) },
+            'deferred_route_failed'
+          );
+        }
+      }
+    });
+    this.jobs.push(deferredJob);
+    this.logger.info('scheduler_deferred_runner_registered');
   }
 
   stop(): void {

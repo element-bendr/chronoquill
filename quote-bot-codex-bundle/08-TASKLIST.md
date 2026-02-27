@@ -11,6 +11,20 @@
 - Phase 7 completed (feature-flagged offline advisory curator + manual review queue workflow)
 - Phase 8 in progress (tests and service hardening added; duplicate-window/global anti-repeat, CSV exports, and DB backup/restore runbook support are now covered)
 
+## Gap Closure Queue (Execute One by One)
+1. Quiet-hours deferral queue (completed 2026-02-27):
+- If a route fires during quiet hours, queue it for the next allowed minute instead of skip-only.
+- Add tests for deferred execution behavior.
+2. Dead-letter and circuit-breaker controls:
+- Track repeated send failures per route/day and move exhausted attempts to explicit dead-letter events.
+- Add health signal for dead-letter counts.
+3. Transport degraded-mode health:
+- Distinguish `healthy`, `degraded`, and `down` transport states in health output.
+4. Restart simulation e2e test:
+- Validate restart + catch-up + no duplicate send across reboot sequence.
+5. Deterministic extraction quality upgrade:
+- Improve transcript/paragraph extraction quality while staying deterministic-first.
+
 ## Phase 0 - Project Setup
 - Initialize Node.js + TypeScript project
 - Add linting, formatting, and test setup

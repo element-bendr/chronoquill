@@ -89,3 +89,9 @@ Every meaningful change must append:
 - Reason: Improve operational resilience and make rollback/recovery repeatable for local-first deployments.
 - Migration Impact: No schema changes.
 - Rollback Notes: Revert backup/restore service and CLI command additions; existing DB and migration behavior remain unchanged.
+
+- Date: 2026-02-27
+- Change: Implemented quiet-hours deferral queue with deferred route run persistence, minute-level deferred scheduler runner, and regression test updates.
+- Reason: Ensure quiet-hours behavior defers delivery instead of dropping scheduled send opportunities.
+- Migration Impact: Added migration `002_deferred_route_runs.sql` creating `deferred_route_runs` table and supporting indexes.
+- Rollback Notes: Revert scheduler/publisher deferral integration and migration if required; keep backup before schema rollback.

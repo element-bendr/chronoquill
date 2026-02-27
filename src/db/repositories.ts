@@ -20,6 +20,17 @@ export interface SendEventExportRow {
   was_catchup: number;
 }
 
+export interface DeferredRouteRun {
+  id: string;
+  route_id: string;
+  local_day: string;
+  next_attempt_at: string;
+  reason: string | null;
+  status: 'pending' | 'done' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
 export class Repositories {
   public constructor(private readonly db: Db) {}
 
@@ -195,6 +206,50 @@ export class Repositories {
         error_message: row.errorMessage ?? null,
         was_catchup: row.wasCatchup ? 1 : 0
       });
+  }
+
+  upsertDeferredRouteRun(routeId: string, localDay: string, nextAttemptAt: string, reason: string): void {
+    const now = isoNow();
+    this.db.conn
+      .prepare(
+        `INSERT INTO deferred_route_runs
+        (id, route_id, local_day, next_attempt_at, reason, status, created_at, updated_at)
+        VALUES (@id, @route_id, @local_day, @next_attempt_at, @reason, 'pending', @created_at, @updated_at)
+        ON CONFLICT(route_id, local_day) DO UPDATE SET
+          next_attempt_at = excluded.next_attempt_at,
+          reason = excluded.reason,
+          status = 'pending',
+          updated_at = excluded.updated_at`
+      )
+      .run({
+        id: makeId(),
+        route_id: routeId,
+        local_day: localDay,
+        next_attempt_at: nextAttemptAt,
+        reason,
+        created_at: now,
+        updated_at: now
+      });
+  }
+
+  listDueDeferredRouteRuns(nowIso: string): DeferredRouteRun[] {
+    return this.db.conn
+      .prepare(
+        `SELECT * FROM deferred_route_runs
+         WHERE status = 'pending' AND next_attempt_at <= ?
+         ORDER BY next_attempt_at ASC`
+      )
+      .all(nowIso) as DeferredRouteRun[];
+  }
+
+  markDeferredRouteRunDone(routeId: string, localDay: string): void {
+    this.db.conn
+      .prepare(
+        `UPDATE deferred_route_runs
+         SET status = 'done', updated_at = ?
+         WHERE route_id = ? AND local_day = ? AND status = 'pending'`
+      )
+      .run(isoNow(), routeId, localDay);
   }
 
   appendAppEvent(eventType: string, severity: 'debug' | 'info' | 'warn' | 'error', payload: unknown): void {

@@ -657,6 +657,12 @@ Every meaningful change must append:
 - Migration Impact: No schema changes.
 - Rollback Notes: Revert backup/restore service and CLI command additions; existing DB and migration behavior remain unchanged.
 
+- Date: 2026-02-27
+- Change: Implemented quiet-hours deferral queue with deferred route run persistence, minute-level deferred scheduler runner, and regression test updates.
+- Reason: Ensure quiet-hours behavior defers delivery instead of dropping scheduled send opportunities.
+- Migration Impact: Added migration `002_deferred_route_runs.sql` creating `deferred_route_runs` table and supporting indexes.
+- Rollback Notes: Revert scheduler/publisher deferral integration and migration if required; keep backup before schema rollback.
+
 
 
 <!-- 08-TASKLIST.md -->
@@ -716,6 +722,20 @@ Every meaningful change must append:
 - Add tests for target-specific cooldown
 - Add systemd service file
 - Add deployment and recovery docs
+
+## Gap Closure Queue (Execute One by One)
+1. Quiet-hours deferral queue (completed 2026-02-27):
+- If a route fires during quiet hours, queue it for the next allowed minute instead of skip-only.
+- Add tests for deferred execution behavior.
+2. Dead-letter and circuit-breaker controls:
+- Track repeated send failures per route/day and move exhausted attempts to explicit dead-letter events.
+- Add health signal for dead-letter counts.
+3. Transport degraded-mode health:
+- Distinguish `healthy`, `degraded`, and `down` transport states in health output.
+4. Restart simulation e2e test:
+- Validate restart + catch-up + no duplicate send across reboot sequence.
+5. Deterministic extraction quality upgrade:
+- Improve transcript/paragraph extraction quality while staying deterministic-first.
 
 ## Done Definition
 The project is done for v1 when:
@@ -784,6 +804,7 @@ Operational backup/restore commands:
 - one quote per route per day
 - cooldown window enabled by default
 - quiet hours configurable
+- quiet-hours routes are deferred to the next allowed minute via deferred route queue
 - dry-run mode available
 
 ## Suggested Default Config

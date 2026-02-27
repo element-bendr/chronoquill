@@ -96,7 +96,12 @@ describe('WhatsAppPublisherService quiet hours', () => {
       .get(routeId, utcDay()) as { status: string; error_code: string } | undefined;
 
     expect(skipped?.status).toBe('skipped');
-    expect(skipped?.error_code).toBe('quiet_hours');
+    expect(skipped?.error_code).toBe('quiet_hours_deferred');
+
+    const deferred = db.conn
+      .prepare("SELECT status FROM deferred_route_runs WHERE route_id = ? AND local_day = ? LIMIT 1")
+      .get(routeId, utcDay()) as { status: string } | undefined;
+    expect(deferred?.status).toBe('pending');
     db.close();
   });
 });

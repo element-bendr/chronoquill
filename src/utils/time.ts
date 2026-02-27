@@ -78,6 +78,22 @@ export const isInsideQuietHours = (date: Date, timezone: string, ranges: QuietHo
   return false;
 };
 
+export const nextAllowedAttemptAt = (date: Date, timezone: string, ranges: QuietHoursRange[]): Date => {
+  if (!isInsideQuietHours(date, timezone, ranges)) {
+    return date;
+  }
+
+  const maxLookAheadMinutes = 24 * 60;
+  for (let i = 1; i <= maxLookAheadMinutes; i += 1) {
+    const candidate = new Date(date.getTime() + i * 60_000);
+    if (!isInsideQuietHours(candidate, timezone, ranges)) {
+      return candidate;
+    }
+  }
+
+  return new Date(date.getTime() + maxLookAheadMinutes * 60_000);
+};
+
 export const isPastTimeToday = (now: Date, timezone: string, hhmm: string): boolean => {
   const [hh, mm] = hhmm.split(':').map((v) => Number(v));
 

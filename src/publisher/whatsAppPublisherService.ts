@@ -2,7 +2,7 @@ import type { AppConfig } from '../config/schema';
 import { Repositories } from '../db/repositories';
 import type { AppLogger } from '../logging/logger';
 import { retryWithBackoff } from '../utils/retry';
-import { isoNow, isInsideQuietHours, localDay } from '../utils/time';
+import { isoNow, isInsideQuietHours, localDay, nextAllowedAttemptAt } from '../utils/time';
 import type { Route } from '../types/domain';
 import type { WhatsAppTransport } from '../adapters/whatsapp';
 import { RoutePlannerService } from '../routing/routePlannerService';
@@ -16,11 +16,12 @@ export class WhatsAppPublisherService {
     private readonly config: AppConfig
   ) {}
 
-  async sendRoute(route: Route, options: { dryRun: boolean; catchup: boolean }): Promise<void> {
+  async sendRoute(route: Route, options: { dryRun: boolean; catchup: boolean; fromDeferred?: boolean }): Promise<void> {
     const now = new Date();
     const local = localDay(now, route.timezone || this.config.TIMEZONE);
 
     if (this.repos.hasRouteSuccessForDay(route.id, local)) {
+      this.repos.markDeferredRouteRunDone(route.id, local);
       this.logger.info({ route: route.name, localDay: local }, 'route_already_sent_today');
       return;
     }
@@ -29,6 +30,8 @@ export class WhatsAppPublisherService {
     const quietHours = JSON.parse(route.quiet_hours_json) as { start: string; end: string }[];
 
     if (isInsideQuietHours(now, route.timezone || this.config.TIMEZONE, quietHours)) {
+      const nextAttempt = nextAllowedAttemptAt(now, route.timezone || this.config.TIMEZONE, quietHours);
+      this.repos.upsertDeferredRouteRun(route.id, local, nextAttempt.toISOString(), 'quiet_hours');
       this.repos.insertSendEvent({
         routeId: route.id,
         quoteId: null,
@@ -37,11 +40,11 @@ export class WhatsAppPublisherService {
         localDay: local,
         status: 'skipped',
         retryCount: 0,
-        errorCode: 'quiet_hours',
-        errorMessage: 'Route execution blocked by quiet-hours window',
+        errorCode: 'quiet_hours_deferred',
+        errorMessage: `Route execution deferred due to quiet-hours until ${nextAttempt.toISOString()}`,
         wasCatchup: options.catchup
       });
-      this.logger.info({ route: route.name }, 'send_skipped_quiet_hours');
+      this.logger.info({ route: route.name, nextAttemptAt: nextAttempt.toISOString() }, 'send_deferred_quiet_hours');
       return;
     }
 
@@ -60,6 +63,9 @@ export class WhatsAppPublisherService {
         errorMessage: 'No approved quote passed route and cooldown filters',
         wasCatchup: options.catchup
       });
+      if (options.fromDeferred) {
+        this.repos.markDeferredRouteRunDone(route.id, local);
+      }
       this.logger.warn({ route: route.name }, 'no_eligible_quote');
       return;
     }
@@ -102,6 +108,7 @@ export class WhatsAppPublisherService {
         wasCatchup: options.catchup
       });
       this.repos.markQuoteSent(quote.id);
+      this.repos.markDeferredRouteRunDone(route.id, local);
       this.logger.info({ route: route.name, quoteId: quote.id }, 'send_success');
     } catch (error) {
       const messageErr = error instanceof Error ? error.message : String(error);
@@ -117,6 +124,10 @@ export class WhatsAppPublisherService {
         errorMessage: messageErr,
         wasCatchup: options.catchup
       });
+      if (options.fromDeferred) {
+        const nextAttempt = new Date(now.getTime() + 15 * 60_000);
+        this.repos.upsertDeferredRouteRun(route.id, local, nextAttempt.toISOString(), 'deferred_send_failed');
+      }
       this.logger.error({ route: route.name, error: messageErr }, 'send_failed');
       throw error;
     }
