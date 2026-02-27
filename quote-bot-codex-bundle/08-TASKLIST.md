@@ -9,7 +9,7 @@
 - Phase 5 completed
 - Phase 6 completed
 - Phase 7 completed (feature-flagged offline advisory curator + manual review queue workflow)
-- Phase 8 in progress (tests and service hardening added; duplicate-window/global anti-repeat coverage and CSV exports for operations are now covered)
+- Phase 8 in progress (tests and service hardening added; duplicate-window/global anti-repeat, CSV exports, and DB backup/restore runbook support are now covered)
 
 ## Phase 0 - Project Setup
 - Initialize Node.js + TypeScript project

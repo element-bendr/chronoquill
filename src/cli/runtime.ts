@@ -25,6 +25,7 @@ import {
 } from '../services/llmCuratorAgent';
 import { ReviewQueueService } from '../services/reviewQueueService';
 import { CsvExportService } from '../services/csvExportService';
+import { DbBackupService } from '../services/dbBackupService';
 
 export const createRuntime = () => {
   const config = loadConfig();
@@ -55,6 +56,7 @@ export const createRuntime = () => {
   const dbCheck = new DbCheckService(repos);
   const reviewQueue = new ReviewQueueService(repos, logger);
   const csvExport = new CsvExportService(repos);
+  const dbBackup = new DbBackupService(db);
 
   return {
     config,
@@ -72,7 +74,8 @@ export const createRuntime = () => {
     reindex,
     dbCheck,
     reviewQueue,
-    csvExport
+    csvExport,
+    dbBackup
   };
 };
 

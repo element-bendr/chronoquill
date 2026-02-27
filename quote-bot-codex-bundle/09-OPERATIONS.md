@@ -44,6 +44,11 @@ If DB check fails:
 - stop send operations
 - emit clear error
 
+Operational backup/restore commands:
+- `backup-db` writes a consistent SQLite backup file.
+- `restore-db <backupPath> --yes` restores from backup and creates a pre-restore safety backup automatically.
+- Restore should be executed with the long-lived service stopped.
+
 ## Safe Sending Defaults
 - one quote per route per day
 - one successful send per route/local-day enforced in DB, not only in scheduler logic

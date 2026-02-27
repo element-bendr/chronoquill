@@ -165,6 +165,35 @@ const run = async (): Promise<void> => {
     });
 
   program
+    .command('backup-db')
+    .description('Create a SQLite backup file')
+    .option('-o, --out <path>', 'Output backup path')
+    .action(async (options: { out?: string }) => {
+      await withRuntime(async (rt) => {
+        const backupPath = await rt.dbBackup.backupTo(options.out);
+        rt.logger.info({ path: backupPath }, 'db_backup_complete');
+      });
+    });
+
+  program
+    .command('restore-db')
+    .description('Restore database from a backup file (creates a safety backup first)')
+    .argument('<backupPath>', 'Path to backup .db file')
+    .option('--yes', 'Confirm restore action', false)
+    .action(async (backupPath: string, options: { yes?: boolean }) => {
+      if (!options.yes) {
+        throw new Error('restore_requires_confirmation: use --yes to proceed');
+      }
+      await withRuntime((rt) => {
+        const result = rt.dbBackup.restoreFrom(backupPath);
+        rt.logger.warn(
+          { restoredTo: result.restoredTo, safetyBackupPath: result.safetyBackupPath },
+          'db_restore_complete'
+        );
+      });
+    });
+
+  program
     .command('run-service')
     .description('Start long-lived scheduler service with boot catch-up and health check')
     .action(async () => {

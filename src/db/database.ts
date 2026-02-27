@@ -5,11 +5,12 @@ import type { AppConfig } from '../config/schema';
 
 export class Db {
   public readonly conn: Database.Database;
+  public readonly dbPath: string;
 
   public constructor(config: AppConfig) {
-    const dbPath = resolve(process.cwd(), config.DATABASE_PATH);
-    mkdirSync(dirname(dbPath), { recursive: true });
-    this.conn = new Database(dbPath);
+    this.dbPath = resolve(process.cwd(), config.DATABASE_PATH);
+    mkdirSync(dirname(this.dbPath), { recursive: true });
+    this.conn = new Database(this.dbPath);
     this.conn.pragma('foreign_keys = ON');
     this.conn.pragma('journal_mode = WAL');
   }
@@ -47,6 +48,10 @@ export class Db {
   }
 
   close(): void {
-    this.conn.close();
+    try {
+      this.conn.close();
+    } catch {
+      // Ignore repeated close calls to keep teardown/restore flows idempotent.
+    }
   }
 }

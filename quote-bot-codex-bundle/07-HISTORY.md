@@ -83,3 +83,9 @@ Every meaningful change must append:
 - Reason: Improve observability and operational reporting for send history and manual review backlog.
 - Migration Impact: No schema changes.
 - Rollback Notes: Revert CSV export service/CLI changes; no data migration rollback required.
+
+- Date: 2026-02-27
+- Change: Added DB backup and restore commands (`backup-db`, `restore-db --yes`), backup/restore service, recovery runbook, and tests.
+- Reason: Improve operational resilience and make rollback/recovery repeatable for local-first deployments.
+- Migration Impact: No schema changes.
+- Rollback Notes: Revert backup/restore service and CLI command additions; existing DB and migration behavior remain unchanged.

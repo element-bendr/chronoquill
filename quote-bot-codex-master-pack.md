@@ -651,6 +651,12 @@ Every meaningful change must append:
 - Migration Impact: No schema changes.
 - Rollback Notes: Revert CSV export service/CLI changes; no data migration rollback required.
 
+- Date: 2026-02-27
+- Change: Added DB backup and restore commands (`backup-db`, `restore-db --yes`), backup/restore service, recovery runbook, and tests.
+- Reason: Improve operational resilience and make rollback/recovery repeatable for local-first deployments.
+- Migration Impact: No schema changes.
+- Rollback Notes: Revert backup/restore service and CLI command additions; existing DB and migration behavior remain unchanged.
+
 
 
 <!-- 08-TASKLIST.md -->
@@ -768,6 +774,11 @@ If transport disconnects:
 If DB check fails:
 - stop send operations
 - emit clear error
+
+Operational backup/restore commands:
+- `backup-db` writes a consistent SQLite backup file.
+- `restore-db <backupPath> --yes` restores from backup and creates a pre-restore safety backup automatically.
+- Restore should be executed with the long-lived service stopped.
 
 ## Safe Sending Defaults
 - one quote per route per day

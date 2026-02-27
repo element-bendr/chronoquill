@@ -31,6 +31,8 @@ npm run dev -- review-approve <quoteId> -- --reason "clear attribution"
 npm run dev -- review-reject <quoteId> -- --reason "fragmented quote"
 npm run dev -- export-send-history -- --out ./exports/send-history.csv --limit 2000
 npm run dev -- export-review-queue -- --out ./exports/review-queue.csv --limit 1000
+npm run dev -- backup-db -- --out ./backups/manual-backup.db
+npm run dev -- restore-db ./backups/manual-backup.db -- --yes
 npm run dev -- run-service
 ```
 
