@@ -21,38 +21,49 @@ export class InboundMessageService {
   ) {}
 
   record(input: InboundMessageInput): void {
-    const inserted = this.repos.insertInboundMessage({
-      transportMessageId: input.transportMessageId,
-      chatId: input.chatId,
-      senderId: input.senderId,
-      pushName: input.pushName,
-      text: input.text,
-      messageType: input.messageType,
-      isGroup: input.isGroup,
-      fromMe: input.fromMe,
-      receivedAt: input.receivedAt ?? isoNow()
-    });
+    try {
+      const inserted = this.repos.insertInboundMessage({
+        transportMessageId: input.transportMessageId,
+        chatId: input.chatId,
+        senderId: input.senderId,
+        pushName: input.pushName,
+        text: input.text,
+        messageType: input.messageType,
+        isGroup: input.isGroup,
+        fromMe: input.fromMe,
+        receivedAt: input.receivedAt ?? isoNow()
+      });
 
-    if (!inserted) {
-      return;
-    }
+      if (!inserted) {
+        return;
+      }
 
-    this.repos.appendAppEvent('inbound_message_received', 'info', {
-      chatId: input.chatId,
-      senderId: input.senderId,
-      messageType: input.messageType,
-      isGroup: input.isGroup,
-      fromMe: input.fromMe
-    });
-
-    this.logger.info(
-      {
+      this.repos.appendAppEvent('inbound_message_received', 'info', {
         chatId: input.chatId,
         senderId: input.senderId,
         messageType: input.messageType,
-        isGroup: input.isGroup
-      },
-      'inbound_message_recorded'
-    );
+        isGroup: input.isGroup,
+        fromMe: input.fromMe
+      });
+
+      this.logger.info(
+        {
+          chatId: input.chatId,
+          senderId: input.senderId,
+          messageType: input.messageType,
+          isGroup: input.isGroup
+        },
+        'inbound_message_recorded'
+      );
+    } catch (error) {
+      this.logger.warn(
+        {
+          chatId: input.chatId,
+          senderId: input.senderId,
+          error: error instanceof Error ? error.message : String(error)
+        },
+        'inbound_message_record_failed'
+      );
+    }
   }
 }

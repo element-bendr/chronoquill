@@ -125,3 +125,9 @@ Every meaningful change must append:
 - Reason: Enable operator verification of real group/user replies and close observability gap for live WhatsApp conversations.
 - Migration Impact: Added migration `003_inbound_messages.sql` creating `inbound_messages` plus unique/indexed lookup paths.
 - Rollback Notes: Revert inbound capture wiring and migration if needed; outbound publishing flow remains unchanged.
+
+- Date: 2026-02-27
+- Change: Hardened inbound capture teardown by handling post-disconnect buffered events safely (`inbound_message_record_failed` warning instead of process crash when DB is already closed in one-shot commands).
+- Reason: Prevent non-critical inbound persistence race from crashing ad-hoc send scripts during transport shutdown.
+- Migration Impact: No schema changes.
+- Rollback Notes: Revert service-layer error handling to previous strict behavior if hard-fail semantics are preferred.
