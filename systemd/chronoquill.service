@@ -1,0 +1,14 @@
+[Unit]
+Description=ChronoQuill local quote scheduler
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/node/ChronoQuill
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/env node dist/cli.js run-service
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
