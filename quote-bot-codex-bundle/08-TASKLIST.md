@@ -8,7 +8,7 @@
 - Phase 4 completed
 - Phase 5 completed
 - Phase 6 completed
-- Phase 7 in progress (feature-flagged offline advisory curator adapter added; core send path remains LLM-free)
+- Phase 7 completed (feature-flagged offline advisory curator + manual review queue workflow)
 - Phase 8 in progress (tests and service hardening added; duplicate-window and global same-day anti-repeat tests now covered)
 
 ## Phase 0 - Project Setup

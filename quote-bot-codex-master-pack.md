@@ -639,6 +639,12 @@ Every meaningful change must append:
 - Migration Impact: No schema changes; advisory traces recorded in `app_events` with event type `llm_curation_advisory`.
 - Rollback Notes: Set `LLM_CURATION_ENABLED=false` or revert integration commit; deterministic curation continues to function unchanged.
 
+- Date: 2026-02-27
+- Change: Added manual review queue workflow with CLI commands `review-list`, `review-approve`, and `review-reject`, plus audit event logging (`review_queue_decision`) and tests.
+- Reason: Complete operator-driven low-confidence review flow required for Phase 7 and prevent implicit auto-approval behavior.
+- Migration Impact: No schema changes.
+- Rollback Notes: Revert review queue service/CLI commit; curation pipeline still functions without manual decision commands.
+
 
 
 <!-- 08-TASKLIST.md -->

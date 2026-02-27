@@ -23,6 +23,7 @@ import {
   NoopLLMCuratorAgent,
   type LLMCuratorAgent
 } from '../services/llmCuratorAgent';
+import { ReviewQueueService } from '../services/reviewQueueService';
 
 export const createRuntime = () => {
   const config = loadConfig();
@@ -51,6 +52,7 @@ export const createRuntime = () => {
   const bootstrap = new BootstrapService(db);
   const reindex = new ReindexService(repos);
   const dbCheck = new DbCheckService(repos);
+  const reviewQueue = new ReviewQueueService(repos, logger);
 
   return {
     config,
@@ -66,7 +68,8 @@ export const createRuntime = () => {
     health,
     bootstrap,
     reindex,
-    dbCheck
+    dbCheck,
+    reviewQueue
   };
 };
 

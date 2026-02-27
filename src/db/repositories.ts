@@ -111,6 +111,10 @@ export class Repositories {
     return this.db.conn.prepare("SELECT * FROM quotes WHERE state = 'approved'").all() as Quote[];
   }
 
+  findQuoteById(id: string): Quote | undefined {
+    return this.db.conn.prepare('SELECT * FROM quotes WHERE id = ? LIMIT 1').get(id) as Quote | undefined;
+  }
+
   hasRouteSuccessForDay(routeId: string, localDay: string): boolean {
     const row = this.db.conn
       .prepare(
@@ -186,6 +190,12 @@ export class Repositories {
     return this.db.conn
       .prepare("SELECT * FROM quotes WHERE state IN ('candidate', 'review') ORDER BY first_seen_at ASC")
       .all() as Quote[];
+  }
+
+  listReviewQueue(limit = 100): Quote[] {
+    return this.db.conn
+      .prepare("SELECT * FROM quotes WHERE state = 'review' ORDER BY first_seen_at ASC LIMIT ?")
+      .all(limit) as Quote[];
   }
 
   updateQuoteIndexed(quoteId: string, normalizedText: string, quoteHash: string): void {

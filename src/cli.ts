@@ -94,6 +94,49 @@ const run = async (): Promise<void> => {
     });
 
   program
+    .command('review-list')
+    .description('List quotes currently waiting in manual review state')
+    .option('-l, --limit <number>', 'Max review quotes to show', '100')
+    .action(async (options: { limit: string }) => {
+      await withRuntime((rt) => {
+        const limit = Number(options.limit);
+        const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 100;
+        const rows = rt.reviewQueue.list(safeLimit);
+        if (rows.length === 0) {
+          console.log('Review queue is empty.');
+          return;
+        }
+
+        for (const row of rows) {
+          const preview = row.text.length > 120 ? `${row.text.slice(0, 117)}...` : row.text;
+          console.log(`${row.id}\t${row.author}\t${row.confidence.toFixed(2)}\t${preview}`);
+        }
+      });
+    });
+
+  program
+    .command('review-approve')
+    .description('Approve a quote currently in review state')
+    .argument('<quoteId>', 'Quote id')
+    .option('-r, --reason <text>', 'Optional operator reason')
+    .action(async (quoteId: string, options: { reason?: string }) => {
+      await withRuntime((rt) => {
+        rt.reviewQueue.setDecision(quoteId, 'approved', options.reason);
+      });
+    });
+
+  program
+    .command('review-reject')
+    .description('Reject a quote currently in review state')
+    .argument('<quoteId>', 'Quote id')
+    .option('-r, --reason <text>', 'Optional operator reason')
+    .action(async (quoteId: string, options: { reason?: string }) => {
+      await withRuntime((rt) => {
+        rt.reviewQueue.setDecision(quoteId, 'rejected', options.reason);
+      });
+    });
+
+  program
     .command('run-service')
     .description('Start long-lived scheduler service with boot catch-up and health check')
     .action(async () => {

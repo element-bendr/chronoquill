@@ -26,6 +26,9 @@ npm run dev -- send-now
 npm run dev -- dry-run
 npm run dev -- reindex
 npm run dev -- db-check
+npm run dev -- review-list -- --limit 50
+npm run dev -- review-approve <quoteId> -- --reason "clear attribution"
+npm run dev -- review-reject <quoteId> -- --reason "fragmented quote"
 npm run dev -- run-service
 ```
 
