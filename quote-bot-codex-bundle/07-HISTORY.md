@@ -143,3 +143,9 @@ Every meaningful change must append:
 - Reason: Remove mixed non-quote artifacts from ingestion output and keep database quote quality production-safe.
 - Migration Impact: No schema changes; data refresh performed for source `src-edgar-allan-poe-quotationspage`.
 - Rollback Notes: Revert extractor changes and tests, then re-sync sources if old extraction behavior is required.
+
+- Date: 2026-02-27
+- Change: Approved the remaining Poe review quote, added additional browser-ingested sources (Albert Einstein, Oscar Wilde, Mark Twain), and updated source sync to skip manual sources instead of attempting URL fetch.
+- Reason: Expand usable quote inventory and keep sync runs clean/noise-free in production operation.
+- Migration Impact: No schema changes; seed source registry expanded and source-run behavior adjusted for `manual` sources.
+- Rollback Notes: Remove added sources from seed and revert manual-source skip logic if old behavior is required.

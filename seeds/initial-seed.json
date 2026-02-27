@@ -36,6 +36,39 @@
       "priority": 15,
       "allowed_themes": ["literature", "poetry", "dark"],
       "enabled": true
+    },
+    {
+      "id": "src-albert-einstein-quotationspage",
+      "name": "QuotationsPage Albert Einstein",
+      "author": "Albert Einstein",
+      "source_type": "static_url",
+      "url_or_path": "https://www.quotationspage.com/quotes/Albert_Einstein/",
+      "fetch_mode": "browser",
+      "priority": 16,
+      "allowed_themes": ["science", "wisdom", "life"],
+      "enabled": true
+    },
+    {
+      "id": "src-oscar-wilde-quotationspage",
+      "name": "QuotationsPage Oscar Wilde",
+      "author": "Oscar Wilde",
+      "source_type": "static_url",
+      "url_or_path": "https://www.quotationspage.com/quotes/Oscar_Wilde/",
+      "fetch_mode": "browser",
+      "priority": 17,
+      "allowed_themes": ["wit", "society", "life"],
+      "enabled": true
+    },
+    {
+      "id": "src-mark-twain-quotationspage",
+      "name": "QuotationsPage Mark Twain",
+      "author": "Mark Twain",
+      "source_type": "static_url",
+      "url_or_path": "https://www.quotationspage.com/quotes/Mark_Twain/",
+      "fetch_mode": "browser",
+      "priority": 18,
+      "allowed_themes": ["humor", "life", "society"],
+      "enabled": true
     }
   ],
   "routes": [

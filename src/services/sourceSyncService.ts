@@ -18,6 +18,11 @@ export class SourceSyncService {
     const sources = this.repos.getEnabledSources();
 
     for (const source of sources) {
+      if (source.source_type === 'manual') {
+        this.logger.info({ source: source.name }, 'source_sync_skipped_manual');
+        continue;
+      }
+
       const runId = this.repos.insertSourceRun({
         sourceId: source.id,
         status: 'running',
