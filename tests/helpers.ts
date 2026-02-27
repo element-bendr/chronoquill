@@ -14,6 +14,7 @@ export const makeTestConfig = (databasePath: string): AppConfig => ({
   TRANSPORT_ADAPTER: 'baileys',
   BAILEYS_AUTH_DIR: './tmp/wa-test-auth',
   BAILEYS_PRINT_QR: false,
+  BAILEYS_QR_IMAGE_PATH: './tmp/wa-test-qr.png',
   BAILEYS_BROWSER_NAME: 'ChronoQuillTest',
   BROWSER_WORKER_ADAPTER: 'noop',
   AGENT_BROWSER_PROVIDER: '',

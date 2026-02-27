@@ -2,11 +2,14 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
   jidNormalizedUser,
-  useMultiFileAuthState,
+  useMultiFileAuthState, proto,
   type WASocket
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode-terminal';
+import QRCode from 'qrcode';
+import { mkdirSync } from 'node:fs';
+import { dirname, resolve as pathResolve } from 'node:path';
 import type { TargetType } from '../types/domain';
 
 export interface WhatsAppTransport {
@@ -15,11 +18,32 @@ export interface WhatsAppTransport {
   resolveTarget(type: TargetType, ref: string): Promise<string>;
   sendText(targetId: string, text: string): Promise<void>;
   disconnect(): Promise<void>;
+  setIncomingMessageHandler?(handler: IncomingMessageHandler): void;
+}
+
+export interface IncomingMessagePayload {
+  transportMessageId: string | null;
+  chatId: string;
+  senderId: string;
+  pushName: string | null;
+  text: string;
+  messageType: string;
+  isGroup: boolean;
+  fromMe: boolean;
+  receivedAt: string;
+}
+
+export type IncomingMessageHandler = (message: IncomingMessagePayload) => void | Promise<void>;
+
+interface ExtractedText {
+  text: string;
+  messageType: string;
 }
 
 export interface BaileysTransportOptions {
   authDir: string;
   printQR: boolean;
+  qrImagePath: string;
   browserName: string;
 }
 
@@ -28,6 +52,7 @@ export class BaileysWhatsAppTransport implements WhatsAppTransport {
   private connected = false;
   private shouldReconnect = true;
   private connectingPromise: Promise<void> | null = null;
+  private incomingMessageHandler: IncomingMessageHandler | null = null;
 
   public constructor(private readonly options: BaileysTransportOptions) {}
 
@@ -108,6 +133,10 @@ export class BaileysWhatsAppTransport implements WhatsAppTransport {
     }
   }
 
+  setIncomingMessageHandler(handler: IncomingMessageHandler): void {
+    this.incomingMessageHandler = handler;
+  }
+
   private async initializeConnection(): Promise<void> {
     const { state, saveCreds } = await useMultiFileAuthState(this.options.authDir);
     const { version } = await fetchLatestBaileysVersion();
@@ -122,8 +151,11 @@ export class BaileysWhatsAppTransport implements WhatsAppTransport {
     this.socket = socket;
 
     socket.ev.on('creds.update', saveCreds);
+    socket.ev.on('messages.upsert', (update) => {
+      void this.handleMessagesUpsert(update.messages ?? []);
+    });
 
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((promiseResolve, reject) => {
       const onUpdate = (update: {
         connection?: string;
         qr?: string;
@@ -132,11 +164,18 @@ export class BaileysWhatsAppTransport implements WhatsAppTransport {
         if (update.qr && this.options.printQR) {
           qrcode.generate(update.qr, { small: true });
         }
+        if (update.qr) {
+          const out = pathResolve(process.cwd(), this.options.qrImagePath);
+          mkdirSync(dirname(out), { recursive: true });
+          void QRCode.toFile(out, update.qr, { margin: 1, width: 512 }).then(() => {
+            console.log(`WHATSAPP_QR_IMAGE ${out}`);
+          });
+        }
 
         if (update.connection === 'open') {
           this.connected = true;
           socket.ev.off('connection.update', onUpdate);
-          resolve();
+          promiseResolve();
           return;
         }
 
@@ -176,5 +215,89 @@ export class BaileysWhatsAppTransport implements WhatsAppTransport {
       throw new Error('whatsapp_transport_not_connected');
     }
     return this.socket;
+  }
+
+  private async handleMessagesUpsert(messages: proto.IWebMessageInfo[]): Promise<void> {
+    if (!this.incomingMessageHandler) {
+      return;
+    }
+
+    for (const entry of messages) {
+      const key = entry.key;
+      const chatId = key?.remoteJid ?? '';
+      if (!chatId || chatId === 'status@broadcast') {
+        continue;
+      }
+
+      const extracted = this.extractText(entry.message ?? undefined);
+      if (!extracted) {
+        continue;
+      }
+
+      const senderId = key?.participant || key?.remoteJid || '';
+      if (!senderId) {
+        continue;
+      }
+
+      const timestampSeconds = Number(entry.messageTimestamp ?? 0);
+      const receivedAt =
+        Number.isFinite(timestampSeconds) && timestampSeconds > 0
+          ? new Date(timestampSeconds * 1000).toISOString()
+          : new Date().toISOString();
+
+      await this.incomingMessageHandler({
+        transportMessageId: key?.id ?? null,
+        chatId,
+        senderId,
+        pushName: entry.pushName ?? null,
+        text: extracted.text,
+        messageType: extracted.messageType,
+        isGroup: chatId.endsWith('@g.us'),
+        fromMe: key?.fromMe === true,
+        receivedAt
+      });
+    }
+  }
+
+  private extractText(message: proto.IMessage | undefined): ExtractedText | null {
+    if (!message) {
+      return null;
+    }
+
+    if (message.conversation) {
+      return { text: message.conversation, messageType: 'conversation' };
+    }
+    if (message.extendedTextMessage?.text) {
+      return { text: message.extendedTextMessage.text, messageType: 'extendedTextMessage' };
+    }
+    if (message.imageMessage?.caption) {
+      return { text: message.imageMessage.caption, messageType: 'imageMessage' };
+    }
+    if (message.videoMessage?.caption) {
+      return { text: message.videoMessage.caption, messageType: 'videoMessage' };
+    }
+    if (message.documentMessage?.caption) {
+      return { text: message.documentMessage.caption, messageType: 'documentMessage' };
+    }
+    if (message.ephemeralMessage?.message) {
+      const nested = this.extractText(message.ephemeralMessage.message);
+      if (nested) {
+        return nested;
+      }
+    }
+    if (message.viewOnceMessage?.message) {
+      const nested = this.extractText(message.viewOnceMessage.message);
+      if (nested) {
+        return nested;
+      }
+    }
+    if (message.viewOnceMessageV2?.message) {
+      const nested = this.extractText(message.viewOnceMessageV2.message);
+      if (nested) {
+        return nested;
+      }
+    }
+
+    return null;
   }
 }

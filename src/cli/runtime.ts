@@ -27,6 +27,7 @@ import {
 import { ReviewQueueService } from '../services/reviewQueueService';
 import { CsvExportService } from '../services/csvExportService';
 import { DbBackupService } from '../services/dbBackupService';
+import { InboundMessageService } from '../services/inboundMessageService';
 
 export const createRuntime = () => {
   const config = loadConfig();
@@ -38,6 +39,7 @@ export const createRuntime = () => {
   const transport = new BaileysWhatsAppTransport({
     authDir: config.BAILEYS_AUTH_DIR,
     printQR: config.BAILEYS_PRINT_QR,
+    qrImagePath: config.BAILEYS_QR_IMAGE_PATH,
     browserName: config.BAILEYS_BROWSER_NAME
   });
   const browserWorker =
@@ -69,6 +71,11 @@ export const createRuntime = () => {
   const reviewQueue = new ReviewQueueService(repos, logger);
   const csvExport = new CsvExportService(repos);
   const dbBackup = new DbBackupService(db);
+  const inboundMessages = new InboundMessageService(repos, logger);
+
+  transport.setIncomingMessageHandler((message) => {
+    inboundMessages.record(message);
+  });
 
   return {
     config,
@@ -87,7 +94,8 @@ export const createRuntime = () => {
     dbCheck,
     reviewQueue,
     csvExport,
-    dbBackup
+    dbBackup,
+    inboundMessages
   };
 };
 

@@ -31,6 +31,20 @@ export interface DeferredRouteRun {
   updated_at: string;
 }
 
+export interface InboundMessageRow {
+  id: string;
+  transport_message_id: string | null;
+  chat_id: string;
+  sender_id: string;
+  push_name: string | null;
+  text: string;
+  message_type: string;
+  is_group: number;
+  from_me: number;
+  received_at: string;
+  created_at: string;
+}
+
 export class Repositories {
   public constructor(private readonly db: Db) {}
 
@@ -256,6 +270,61 @@ export class Repositories {
     this.db.conn
       .prepare('INSERT INTO app_events (id, event_type, event_time, severity, payload_json) VALUES (?, ?, ?, ?, ?)')
       .run(makeId(), eventType, isoNow(), severity, JSON.stringify(payload));
+  }
+
+  insertInboundMessage(row: {
+    transportMessageId: string | null;
+    chatId: string;
+    senderId: string;
+    pushName: string | null;
+    text: string;
+    messageType: string;
+    isGroup: boolean;
+    fromMe: boolean;
+    receivedAt: string;
+  }): boolean {
+    const result = this.db.conn
+      .prepare(
+        `INSERT OR IGNORE INTO inbound_messages
+        (id, transport_message_id, chat_id, sender_id, push_name, text, message_type, is_group, from_me, received_at, created_at)
+        VALUES (@id, @transport_message_id, @chat_id, @sender_id, @push_name, @text, @message_type, @is_group, @from_me, @received_at, @created_at)`
+      )
+      .run({
+        id: makeId(),
+        transport_message_id: row.transportMessageId,
+        chat_id: row.chatId,
+        sender_id: row.senderId,
+        push_name: row.pushName,
+        text: row.text,
+        message_type: row.messageType,
+        is_group: row.isGroup ? 1 : 0,
+        from_me: row.fromMe ? 1 : 0,
+        received_at: row.receivedAt,
+        created_at: isoNow()
+      });
+    return result.changes > 0;
+  }
+
+  listRecentInboundMessages(limit = 100, chatId?: string): InboundMessageRow[] {
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 100;
+    if (chatId) {
+      return this.db.conn
+        .prepare(
+          `SELECT * FROM inbound_messages
+           WHERE chat_id = ?
+           ORDER BY received_at DESC
+           LIMIT ?`
+        )
+        .all(chatId, safeLimit) as InboundMessageRow[];
+    }
+
+    return this.db.conn
+      .prepare(
+        `SELECT * FROM inbound_messages
+         ORDER BY received_at DESC
+         LIMIT ?`
+      )
+      .all(safeLimit) as InboundMessageRow[];
   }
 
   pendingCurationQuotes(): Quote[] {

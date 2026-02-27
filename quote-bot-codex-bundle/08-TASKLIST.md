@@ -12,6 +12,9 @@
 - Phase 8 in progress (tests and service hardening added; duplicate-window/global anti-repeat, CSV exports, and DB backup/restore runbook support are now covered)
 
 ## Gap Closure Queue (Execute One by One)
+0. Inbound WhatsApp reply capture and inspection (completed 2026-02-27):
+- Persist real inbound group/direct replies while transport is connected.
+- Add operator CLI command to inspect recent inbound messages.
 1. Quiet-hours deferral queue (completed 2026-02-27):
 - If a route fires during quiet hours, queue it for the next allowed minute instead of skip-only.
 - Add tests for deferred execution behavior.

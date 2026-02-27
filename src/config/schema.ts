@@ -26,6 +26,7 @@ export const envSchema = z.object({
   TRANSPORT_ADAPTER: z.enum(['baileys']).default('baileys'),
   BAILEYS_AUTH_DIR: z.string().min(1).default('./data/whatsapp-auth'),
   BAILEYS_PRINT_QR: envBool(true),
+  BAILEYS_QR_IMAGE_PATH: z.string().min(1).default('./data/whatsapp-qr.png'),
   BAILEYS_BROWSER_NAME: z.string().min(1).default('ChronoQuill'),
   BROWSER_WORKER_ADAPTER: z.enum(['noop', 'agent-browser']).default('agent-browser'),
   AGENT_BROWSER_PROVIDER: z.string().default(''),

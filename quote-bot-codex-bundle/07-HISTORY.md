@@ -3,6 +3,7 @@
 This file is append-only and records product decisions.
 
 ## Initial Decisions
+
 - v1 is local-first.
 - v1 uses SQLite.
 - v1 uses adapter-based WhatsApp transport.
@@ -13,6 +14,7 @@ This file is append-only and records product decisions.
 - v1 allows optional offline LLM curation.
 
 ## Architectural Decisions
+
 - Deterministic validators decide publishability.
 - Browser automation is fallback-only.
 - Send history drives anti-repeat behavior.
@@ -20,7 +22,9 @@ This file is append-only and records product decisions.
 - Source registry is configuration-backed, not hard-coded chaos.
 
 ## Change Logging Rules
+
 Every meaningful change must append:
+
 - date
 - change summary
 - reason
@@ -29,6 +33,7 @@ Every meaningful change must append:
 - update this file in the same task batch as the code/doc change
 
 ## Example Entry Template
+
 - Date:
 - Change:
 - Reason:
@@ -36,6 +41,7 @@ Every meaningful change must append:
 - Rollback Notes:
 
 ## Entries
+
 - Date: 2026-02-27
 - Change: Added `send_events.local_day`, route/day success uniqueness, quote `last_sent_at`, and explicit retry/backoff config keys.
 - Reason: Make anti-duplicate and recovery guarantees enforceable at DB level, not just in runtime logic.
@@ -107,3 +113,15 @@ Every meaningful change must append:
 - Reason: Enable real browser-based quote capture for dynamic sources via the existing browser abstraction.
 - Migration Impact: No schema changes; added runtime config keys (`AGENT_BROWSER_PROVIDER`, `AGENT_BROWSER_HEADLESS`, `AGENT_BROWSER_NAV_TIMEOUT_MS`).
 - Rollback Notes: Switch adapter to `noop` or revert `agent-browser` integration changes if browser runtime is unavailable.
+
+- Date: 2026-02-27
+- Change: Repaired WhatsApp pairing flow for CLI ping verification, added QR image output path for easier scanning (`BAILEYS_QR_IMAGE_PATH`), and revalidated live sends to direct JID and `PUNTERS` group ID.
+- Reason: Resolve terminal QR readability and confirm end-to-end production delivery path with explicit target IDs during operator testing.
+- Migration Impact: No schema changes; added runtime config key `BAILEYS_QR_IMAGE_PATH`.
+- Rollback Notes: Revert QR file output/config additions; pairing can still proceed through terminal QR rendering only.
+
+- Date: 2026-02-27
+- Change: Added production inbound WhatsApp capture pipeline with Baileys `messages.upsert` handling, persisted `inbound_messages` table, app event logging (`inbound_message_received`), and new CLI inspection command `inbound-list`.
+- Reason: Enable operator verification of real group/user replies and close observability gap for live WhatsApp conversations.
+- Migration Impact: Added migration `003_inbound_messages.sql` creating `inbound_messages` plus unique/indexed lookup paths.
+- Rollback Notes: Revert inbound capture wiring and migration if needed; outbound publishing flow remains unchanged.

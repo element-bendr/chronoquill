@@ -165,6 +165,30 @@ const run = async (): Promise<void> => {
     });
 
   program
+    .command('inbound-list')
+    .description('List recently captured inbound WhatsApp messages')
+    .option('-l, --limit <number>', 'Max inbound messages to show', '50')
+    .option('-c, --chat <id>', 'Filter by exact chat id (for example: 12345-678@g.us)')
+    .action(async (options: { limit: string; chat?: string }) => {
+      await withRuntime((rt) => {
+        const limit = Number(options.limit);
+        const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 50;
+        const rows = rt.repos.listRecentInboundMessages(safeLimit, options.chat);
+        if (rows.length === 0) {
+          console.log('No inbound messages found.');
+          return;
+        }
+
+        for (const row of rows) {
+          const preview = row.text.length > 120 ? `${row.text.slice(0, 117)}...` : row.text;
+          console.log(
+            `${row.received_at}\t${row.chat_id}\t${row.sender_id}\t${row.message_type}\t${row.from_me}\t${preview}`
+          );
+        }
+      });
+    });
+
+  program
     .command('backup-db')
     .description('Create a SQLite backup file')
     .option('-o, --out <path>', 'Output backup path')

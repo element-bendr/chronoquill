@@ -9,6 +9,7 @@ ChronoQuill is a local-first deterministic quote ingestion and WhatsApp publishi
 - Sends exactly one quote per route/day (DB-enforced for success events).
 - Performs startup boot catch-up for missed sends.
 - Exposes CLI commands for bootstrap, sync, curation, send, dry-run, reindex, and db checks.
+- Captures inbound WhatsApp replies (group and direct) while connected for operational visibility.
 
 ## Setup
 ```bash
@@ -33,6 +34,7 @@ npm run dev -- export-send-history -- --out ./exports/send-history.csv --limit 2
 npm run dev -- export-review-queue -- --out ./exports/review-queue.csv --limit 1000
 npm run dev -- backup-db -- --out ./backups/manual-backup.db
 npm run dev -- restore-db ./backups/manual-backup.db -- --yes
+npm run dev -- inbound-list -- --limit 50
 npm run dev -- run-service
 ```
 
@@ -51,6 +53,12 @@ npm run dev -- run-service
 - Route targets:
   - `target_type=user`: set `target_ref` to phone digits with country code (or full `@s.whatsapp.net` JID)
   - `target_type=group`: set `target_ref` to group JID (`...@g.us`) or exact group subject name
+- Inbound replies are captured while the service is connected (recommended via `run-service`).
+- Inspect recent inbound traffic:
+```bash
+npm run dev -- inbound-list -- --limit 50
+npm run dev -- inbound-list -- --chat 919892264067-1366368265@g.us --limit 50
+```
 
 ## Browser Ingestion Worker (Vercel Agent Browser)
 - Browser worker uses `agent-browser` (`vercel-labs/agent-browser`) through the `BrowserWorker` adapter.
