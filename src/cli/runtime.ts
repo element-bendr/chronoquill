@@ -4,6 +4,7 @@ import { Repositories } from '../db/repositories';
 import { buildLogger } from '../logging/logger';
 import { BaileysWhatsAppTransport } from '../adapters/whatsapp';
 import { NoopBrowserWorker } from '../browser/worker';
+import { AgentBrowserWorker } from '../browser/agentBrowserWorker';
 import { DefaultQuoteSourceAdapter } from '../adapters/sourceAdapter';
 import { QuoteExtractor } from '../ingestion/extractor';
 import { DeduplicationService } from '../services/deduplicationService';
@@ -39,7 +40,14 @@ export const createRuntime = () => {
     printQR: config.BAILEYS_PRINT_QR,
     browserName: config.BAILEYS_BROWSER_NAME
   });
-  const browserWorker = new NoopBrowserWorker();
+  const browserWorker =
+    config.BROWSER_WORKER_ADAPTER === 'agent-browser'
+      ? new AgentBrowserWorker({
+          provider: config.AGENT_BROWSER_PROVIDER,
+          headless: config.AGENT_BROWSER_HEADLESS,
+          navigationTimeoutMs: config.AGENT_BROWSER_NAV_TIMEOUT_MS
+        })
+      : new NoopBrowserWorker();
   const sourceAdapter = new DefaultQuoteSourceAdapter(browserWorker);
   const extractor = new QuoteExtractor();
   const dedup = new DeduplicationService();

@@ -52,6 +52,20 @@ npm run dev -- run-service
   - `target_type=user`: set `target_ref` to phone digits with country code (or full `@s.whatsapp.net` JID)
   - `target_type=group`: set `target_ref` to group JID (`...@g.us`) or exact group subject name
 
+## Browser Ingestion Worker (Vercel Agent Browser)
+- Browser worker uses `agent-browser` (`vercel-labs/agent-browser`) through the `BrowserWorker` adapter.
+- Set in `.env`:
+  - `BROWSER_WORKER_ADAPTER=agent-browser`
+  - optional `AGENT_BROWSER_PROVIDER` (blank for local; set provider name for cloud-backed sessions)
+- One-time browser install:
+```bash
+npx agent-browser install
+```
+- Linux dependency install if needed:
+```bash
+npx agent-browser install --with-deps
+```
+
 ## Systemd user service
 Copy `systemd/chronoquill.service` to:
 - `~/.config/systemd/user/chronoquill.service`

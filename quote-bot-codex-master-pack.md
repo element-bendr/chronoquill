@@ -669,6 +669,12 @@ Every meaningful change must append:
 - Migration Impact: No schema changes; new runtime config keys added (`BAILEYS_AUTH_DIR`, `BAILEYS_PRINT_QR`, `BAILEYS_BROWSER_NAME`).
 - Rollback Notes: Revert transport adapter changes and restore previous transport configuration if needed.
 
+- Date: 2026-02-27
+- Change: Integrated Vercel `agent-browser` as a production browser worker adapter (`BROWSER_WORKER_ADAPTER=agent-browser`) with provider/headless/timeout config and runtime selection.
+- Reason: Enable real browser-based quote capture for dynamic sources via the existing browser abstraction.
+- Migration Impact: No schema changes; added runtime config keys (`AGENT_BROWSER_PROVIDER`, `AGENT_BROWSER_HEADLESS`, `AGENT_BROWSER_NAV_TIMEOUT_MS`).
+- Rollback Notes: Switch adapter to `noop` or revert `agent-browser` integration changes if browser runtime is unavailable.
+
 
 
 <!-- 08-TASKLIST.md -->
